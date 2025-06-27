@@ -1,57 +1,78 @@
-
 const express = require('express');
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
 const multer = require('multer');
+
 const app = express();
 const port = process.env.PORT || 3000;
-
 const upload = multer({ dest: 'public/uploads/' });
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
 
 const DATA_FILE = path.join(__dirname, 'links.json');
 
-let data = { groups: [], channels: [] };
-if (fs.existsSync(DATA_FILE)) {
-  data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
+
+let groups = [];
+
+// Load existing groups from file or initialize empty
+async function loadGroups() {
+  try {
+    const data = await fs.readFile(DATA_FILE, 'utf8');
+    groups = JSON.parse(data);
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      groups = [];
+      await saveGroups();
+    } else {
+      console.error('Error reading groups file:', err);
+    }
+  }
 }
 
-app.post('/submit', upload.single('groupImage'), (req, res) => {
-  const { username, groupName, groupLink, category } = req.body;
-  if (!username || username.trim() === '') return res.status(400).send('Username is required.');
-  if (!groupName || groupName.trim() === '') return res.status(400).send('Name is required.');
-  if (!groupLink || groupLink.trim() === '') return res.status(400).send('Link is required.');
-  if (category !== 'group' && category !== 'channel') return res.status(400).send('Invalid category.');
+// Save groups array to file
+async function saveGroups() {
+  try {
+    await fs.writeFile(DATA_FILE, JSON.stringify(groups, null, 2));
+  } catch (err) {
+    console.error('Error writing groups file:', err);
+  }
+}
 
-  // Validate group and channel links
-  if (category === 'group' && !groupLink.startsWith('https://chat.whatsapp.com/')) {
+// Initialize groups on server start
+loadGroups();
+
+app.post('/submit', upload.single('groupImage'), async (req, res) => {
+  const { username, groupName, groupLink } = req.body;
+
+  if (!username || !username.trim()) return res.status(400).send('Username is required.');
+  if (!groupName || !groupName.trim()) return res.status(400).send('Group name is required.');
+  if (!groupLink || !groupLink.trim()) return res.status(400).send('Group link is required.');
+
+  if (!groupLink.startsWith('https://chat.whatsapp.com/')) {
     return res.status(400).send('Invalid WhatsApp group link.');
   }
-  if (category === 'channel' && !groupLink.startsWith('https://whatsapp.com/channel/')) {
-    return res.status(400).send('Invalid WhatsApp channel link.');
-  }
 
-  let imagePath = req.file ? `/uploads/${req.file.filename}` : null;
-  const entry = {
+  const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+
+  // Add new group to array
+  groups.push({
     username: username.trim(),
-    name: groupName.trim(),
-    link: groupLink.trim(),
+    groupName: groupName.trim(),
+    groupLink: groupLink.trim(),
     imagePath,
-  };
+  });
 
-  if (category === 'group') {
-    data.groups.push(entry);
-  } else {
-    data.channels.push(entry);
+  try {
+    await saveGroups();
+    res.sendStatus(200);
+  } catch (err) {
+    console.error('Failed to save group:', err);
+    res.status(500).send('Internal server error.');
   }
-
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-  res.sendStatus(200);
 });
 
 app.get('/links', (req, res) => {
-  res.json(data);
+  res.json(groups);
 });
 
 app.get('/', (req, res) => {
@@ -61,4 +82,3 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
 });
-
