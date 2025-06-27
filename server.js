@@ -37,8 +37,8 @@ wss.on('connection', ws => {
     try { data = JSON.parse(msg); } catch { return; }
     if (data.type === 'join') {
       username = data.username;
+      ws._username = username;
       onlineUsers.add(username);
-      // Send chat history to this client
       ws.send(JSON.stringify({ type: 'history', messages }));
       broadcast({ type: 'online', count: onlineUsers.size });
     } else if (data.type === 'leave') {
@@ -46,19 +46,17 @@ wss.on('connection', ws => {
       broadcast({ type: 'online', count: onlineUsers.size });
     } else if (data.type === 'message') {
       messages.push(data.message);
-      // Limit history to last 200 messages
       if (messages.length > 200) messages = messages.slice(-200);
       broadcast({ type: 'message', message: data.message });
     } else if (data.type === 'signal') {
-      // WebRTC signaling: forward only to the target
+      // For demo: broadcast signaling to all except sender (group call)
       wss.clients.forEach(client => {
-        if (client !== ws && client.readyState === WebSocket.OPEN && client._username === data.target) {
+        if (client !== ws && client.readyState === WebSocket.OPEN) {
           client.send(JSON.stringify({ type: 'signal', from: username, signal: data.signal }));
         }
       });
     }
   });
-  ws._username = username;
   ws.on('close', () => {
     if (username) onlineUsers.delete(username);
     broadcast({ type: 'online', count: onlineUsers.size });

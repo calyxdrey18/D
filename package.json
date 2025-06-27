@@ -1,7 +1,7 @@
 {
   "name": "calyx-drey-chathub",
   "version": "1.0.0",
-  "description": "Modern group chat app with lavender bubbles and animated guide",
+  "description": "Modern group chat app with lavender bubbles, animated guide, and video calling",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
