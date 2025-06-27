@@ -3,14 +3,23 @@ const fs = require('fs');
 const path = require('path');
 const WebSocket = require('ws');
 
+const publicDir = path.join(__dirname, 'public');
+const PORT = process.env.PORT || 10000;
+
 const server = http.createServer((req, res) => {
   let file = req.url === '/' ? '/index.html' : req.url;
-  const filePath = path.join(__dirname, file);
+  const filePath = path.join(publicDir, file.split('?')[0]);
   fs.readFile(filePath, (err, data) => {
-    if (err) { res.writeHead(404); return res.end('Not found'); }
+    if (err) {
+      res.writeHead(404);
+      return res.end('Not found');
+    }
     let type = 'text/html';
     if (file.endsWith('.js')) type = 'application/javascript';
     if (file.endsWith('.css')) type = 'text/css';
+    if (file.endsWith('.png')) type = 'image/png';
+    if (file.endsWith('.jpg') || file.endsWith('.jpeg')) type = 'image/jpeg';
+    if (file.endsWith('.svg')) type = 'image/svg+xml';
     res.writeHead(200, { 'Content-Type': type });
     res.end(data);
   });
@@ -48,5 +57,4 @@ function broadcast(data) {
   });
 }
 
-const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
