@@ -6,6 +6,8 @@ const WebSocket = require('ws');
 const publicDir = path.join(__dirname, 'public');
 const PORT = process.env.PORT || 10000;
 
+let messages = []; // In-memory message storage
+
 const server = http.createServer((req, res) => {
   let file = req.url === '/' ? '/index.html' : req.url;
   const filePath = path.join(publicDir, file.split('?')[0]);
@@ -36,14 +38,27 @@ wss.on('connection', ws => {
     if (data.type === 'join') {
       username = data.username;
       onlineUsers.add(username);
+      // Send chat history to this client
+      ws.send(JSON.stringify({ type: 'history', messages }));
       broadcast({ type: 'online', count: onlineUsers.size });
     } else if (data.type === 'leave') {
       if (username) onlineUsers.delete(username);
       broadcast({ type: 'online', count: onlineUsers.size });
     } else if (data.type === 'message') {
-      broadcast(data);
+      messages.push(data.message);
+      // Limit history to last 200 messages
+      if (messages.length > 200) messages = messages.slice(-200);
+      broadcast({ type: 'message', message: data.message });
+    } else if (data.type === 'signal') {
+      // WebRTC signaling: forward only to the target
+      wss.clients.forEach(client => {
+        if (client !== ws && client.readyState === WebSocket.OPEN && client._username === data.target) {
+          client.send(JSON.stringify({ type: 'signal', from: username, signal: data.signal }));
+        }
+      });
     }
   });
+  ws._username = username;
   ws.on('close', () => {
     if (username) onlineUsers.delete(username);
     broadcast({ type: 'online', count: onlineUsers.size });
