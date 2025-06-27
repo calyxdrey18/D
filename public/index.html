@@ -40,71 +40,14 @@
     .cdx-input-bar .cdx-btn:hover { color:#4b3a75; background:#e6e9f0;}
     .cdx-input-bar .cdx-send-btn { color:#fff; background:#6b4e9c; border-radius:50%; width:42px; height:42px; display:flex; align-items:center; justify-content:center; font-size:1.3rem; margin-left:4px; border:none; cursor:pointer; transition:background 0.2s;}
     .cdx-input-bar .cdx-send-btn:hover { background:#4b3a75;}
-    /* Video call modal */
-    .cdx-video-modal { position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(40,50,60,0.85); display:flex; align-items:center; justify-content:center; z-index:1000; display:none;}
-    .cdx-video-modal.active { display:flex;}
-    .cdx-video-box { background:#fff; border-radius:16px; padding:24px 20px; box-shadow:0 8px 32px #0006; text-align:center; min-width:320px; max-width:98vw;}
-    .cdx-video-box h2 { color:#6b4e9c; font-size:1.2rem; margin-bottom:18px;}
-    .cdx-video-box video { width:320px; max-width:80vw; background:#222; border-radius:8px; margin-bottom:12px;}
-    .cdx-video-box button { background:#6b4e9c; color:#fff; border:none; border-radius:8px; padding:8px 20px; font-size:1rem; margin:0 7px; cursor:pointer; transition:background 0.2s;}
-    .cdx-video-box button:hover { background:#4b3a75;}
-    /* Animated popup */
-    .cdx-guide-popup-bg {
-      position:fixed; top:0; left:0; width:100vw; height:100vh;
-      background:rgba(60,50,100,0.25);
-      display:flex; align-items:center; justify-content:center;
-      z-index:3000;
-      animation:fadeInBg 0.5s;
-    }
-    .cdx-guide-popup {
-      background: #fff;
-      border-radius: 20px;
-      box-shadow: 0 8px 40px #6b4e9c44;
-      padding: 36px 30px 30px 30px;
-      min-width: 300px;
-      max-width: 96vw;
-      text-align: center;
-      position:relative;
-      transform:scale(0.7);
-      opacity:0;
-      animation: popupIn 0.7s cubic-bezier(.25,1.7,.7,1.2) forwards;
-    }
-    .cdx-guide-popup h2 {
-      color: #6b4e9c;
-      font-size: 1.5rem;
-      margin-bottom: 16px;
-      letter-spacing: 1px;
-      font-weight: 700;
-    }
-    .cdx-guide-popup ul {
-      text-align:left;
-      margin:18px auto 18px auto;
-      padding:0 0 0 18px;
-      color: #4b3a75;
-      font-size: 1.09rem;
-      line-height: 1.8;
-    }
-    .cdx-guide-popup .cdx-guide-btn {
-      margin-top: 18px;
-      background: #6b4e9c;
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      padding: 10px 32px;
-      font-size: 1.08rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s, box-shadow 0.2s;
-      box-shadow: 0 2px 8px #6b4e9c22;
-    }
-    .cdx-guide-popup .cdx-guide-btn:hover {
-      background: #4b3a75;
-      box-shadow: 0 4px 16px #6b4e9c33;
-    }
-    .cdx-guide-popup .cdx-guide-emoji {
-      font-size:2.2rem; margin-bottom:8px; display:block;
-      animation: bounce 1.2s infinite alternate;
-    }
+    /* Guide popup */
+    .cdx-guide-popup-bg { position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(60,50,100,0.25); display:flex; align-items:center; justify-content:center; z-index:3000; animation:fadeInBg 0.5s;}
+    .cdx-guide-popup { background:#fff; border-radius:20px; box-shadow:0 8px 40px #6b4e9c44; padding:36px 30px 30px 30px; min-width:300px; max-width:96vw; text-align:center; position:relative; transform:scale(0.7); opacity:0; animation:popupIn 0.7s cubic-bezier(.25,1.7,.7,1.2) forwards;}
+    .cdx-guide-popup h2 { color:#6b4e9c; font-size:1.5rem; margin-bottom:16px; letter-spacing:1px; font-weight:700;}
+    .cdx-guide-popup ul { text-align:left; margin:18px auto 18px auto; padding:0 0 0 18px; color:#4b3a75; font-size:1.09rem; line-height:1.8;}
+    .cdx-guide-popup .cdx-guide-btn { margin-top:18px; background:#6b4e9c; color:#fff; border:none; border-radius:10px; padding:10px 32px; font-size:1.08rem; font-weight:600; cursor:pointer; transition:background 0.2s, box-shadow 0.2s; box-shadow:0 2px 8px #6b4e9c22;}
+    .cdx-guide-popup .cdx-guide-btn:hover { background:#4b3a75; box-shadow:0 4px 16px #6b4e9c33;}
+    .cdx-guide-popup .cdx-guide-emoji { font-size:2.2rem; margin-bottom:8px; display:block; animation:bounce 1.2s infinite alternate;}
     @keyframes fadeInMsg { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;} }
     @keyframes fadeInBg { from{opacity:0;} to{opacity:1;} }
     @keyframes popupIn { 0%{transform:scale(0.7); opacity:0;} 80%{transform:scale(1.07); opacity:1;} 100%{transform:scale(1); opacity:1;} }
@@ -143,12 +86,11 @@
       <h2>Welcome to Calyx-Drey Chathub!</h2>
       <ul>
         <li>Pick a unique username and upload your profile picture.</li>
-        <li>Choose your favorite bubble color (all messages use lavender by default).</li>
         <li>Type messages and press <b>Enter</b> or the <b>Send</b> button to chat.</li>
         <li>Swipe or click the <i class="fas fa-reply"></i> icon on any message to reply.</li>
         <li>Click <i class="fas fa-paperclip"></i> to share images or files.</li>
         <li>Click <i class="fas fa-video"></i> to start a video call (demo).</li>
-        <li>Your chat bubbles are always compact and beautiful!</li>
+        <li>Your chat bubbles are always compact and lavender!</li>
       </ul>
       <button class="cdx-guide-btn" onclick="closeGuidePopup()">Let's Start!</button>
     </div>
@@ -163,7 +105,7 @@
         <input type="file" id="cdx-profile-pic-input" accept="image/*" style="display:none;">
       </div>
       <label class="cdx-color-label" for="cdx-bubble-color-input">Choose your bubble color</label>
-      <input type="color" id="cdx-bubble-color-input" value="#e6e6fa">
+      <input type="color" id="cdx-bubble-color-input" value="#e6e6fa" disabled>
       <div class="cdx-error" id="cdx-username-error"></div>
       <input type="text" id="cdx-username-input" placeholder="Enter username..." maxlength="18" autocomplete="off" />
       <br>
@@ -222,6 +164,25 @@
       { name: "Jordan", color: "#39b385", profilePic: "https://i.pravatar.cc/44?img=3", bubbleColor: "#e1bee7" }
     ];
 
+    // WebSocket
+    let ws;
+    function connectWS() {
+      ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host);
+      ws.onopen = () => { if (myUser) ws.send(JSON.stringify({type:'join', username:myUser.name})); };
+      ws.onmessage = e => {
+        let data = {};
+        try { data = JSON.parse(e.data); } catch { return; }
+        if (data.type === 'online') {
+          document.getElementById('cdx-online-number').textContent = data.count;
+        } else if (data.type === 'message') {
+          messages.push(data.message);
+          renderMessages();
+        }
+      };
+      ws.onclose = () => setTimeout(connectWS, 3000);
+    }
+    connectWS();
+
     // Profile picture upload logic (modal)
     document.getElementById('cdx-profile-preview').onclick =
     document.querySelector('.cdx-profile-upload-label').onclick = function() {
@@ -245,9 +206,9 @@
       document.getElementById('cdx-profile-pic-input').click();
     };
 
-    // Bubble color picker
+    // Bubble color picker (locked to lavender)
     document.getElementById('cdx-bubble-color-input').onchange = function() {
-      myBubbleColor = "#e6e6fa"; // always lavender
+      myBubbleColor = "#e6e6fa";
       this.value = "#e6e6fa";
     };
 
@@ -262,7 +223,6 @@
     function updateOnlineUsers() {
       users = [myUser, ...demoUsers];
       document.getElementById('cdx-online-badge').style.display = 'flex';
-      document.getElementById('cdx-online-number').textContent = users.length;
     }
     document.getElementById('cdx-username-btn').onclick = trySetUsername;
     document.getElementById('cdx-username-input').addEventListener('keypress', e => {
@@ -283,6 +243,7 @@
       document.getElementById('cdx-header-profile-pic').src = myProfilePic;
       hideUsernameModal();
       updateOnlineUsers();
+      ws.send(JSON.stringify({type:'join', username:myUser.name}));
       messages = [
         { user: demoUsers[0], text: "Welcome to the new group chat!", time: "09:01" },
         { user: demoUsers[1], text: "Hey all! 🎉", time: "09:02" },
@@ -364,15 +325,17 @@
       const input = document.getElementById('cdx-message-input');
       const text = input.value.trim();
       if (!text && !replyTo) return;
-      messages.push({
+      const msgObj = {
         user: {...myUser, bubbleColor: "lavender"},
         text,
         time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),
         reply: replyTo ? { user: replyTo.user, text: replyTo.text } : undefined
-      });
+      };
+      messages.push(msgObj);
       renderMessages();
       input.value = '';
       replyTo = null;
+      if (ws && ws.readyState === 1) ws.send(JSON.stringify({type:'message', message:msgObj}));
     }
     document.getElementById('attach-btn').onclick = () => document.getElementById('cdx-file-input').click();
     document.getElementById('cdx-file-input').onchange = function() {
@@ -380,15 +343,17 @@
       const file = this.files[0];
       const reader = new FileReader();
       reader.onload = function(e) {
-        messages.push({
+        const msgObj = {
           user: {...myUser, bubbleColor: "lavender"},
           file: e.target.result,
           fileName: file.name,
           time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),
           reply: replyTo ? { user: replyTo.user, text: replyTo.text } : undefined
-        });
+        };
+        messages.push(msgObj);
         renderMessages();
         replyTo = null;
+        if (ws && ws.readyState === 1) ws.send(JSON.stringify({type:'message', message:msgObj}));
       };
       reader.readAsDataURL(file);
       this.value = '';
