@@ -6,8 +6,82 @@
   <title>Calyx-Drey Chathub</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   <style>
-    /* ... (same CSS as before, lavender bubbles, guide popup, etc.) ... */
-    /* For brevity, use the CSS from the previous answer */
+    html, body { margin:0; padding:0; width:100vw; height:100vh; background:linear-gradient(120deg,#f5f7fa 0%,#c3cfe2 100%); font-family:'Segoe UI',Arial,sans-serif; overflow:hidden;}
+    .cdx-root { width:100vw; height:100vh; max-width:100vw; max-height:100vh; display:flex; flex-direction:column; background:rgba(255,255,255,0.98);}
+    .cdx-header { flex-shrink:0; background:#334e68; color:#fff; padding:16px 22px; display:flex; align-items:center; gap:14px; border-bottom-left-radius:18px; border-bottom-right-radius:18px; box-shadow:0 2px 8px #0001; position:relative; z-index:2;}
+    .cdx-header .cdx-profile-pic { width:44px; height:44px; border-radius:12px; object-fit:cover; border:2px solid #fff; cursor:pointer; background:#fff;}
+    .cdx-header .cdx-title { flex:1; font-size:1.18rem; font-weight:600; letter-spacing:0.5px;}
+    .cdx-header .cdx-actions { display:flex; align-items:center; gap:16px;}
+    .cdx-header .cdx-actions i { cursor:pointer; font-size:1.35rem; opacity:1; margin-left:0; transition:opacity 0.2s;}
+    .cdx-header .cdx-actions i:hover { opacity:0.8;}
+    .cdx-online-badge { margin-left:18px; background:#fff; color:#334e68; font-weight:bold; font-size:0.97rem; border-radius:14px; padding:3px 14px; box-shadow:0 1px 4px #0002; letter-spacing:0.5px; display:flex; align-items:center; gap:6px; height:28px; min-width:60px; justify-content:center;}
+    .cdx-online-dot { width:10px; height:10px; border-radius:50%; background:#39b385; display:inline-block;}
+    .cdx-chat-area { flex:1; background:#f6f8fa; overflow-y:auto; padding:26px 4vw 16px 4vw; display:flex; flex-direction:column; gap:12px; scroll-behavior:smooth; position:relative; z-index:1;}
+    .cdx-message { width:25%; min-width:25%; max-width:25%; display:flex; flex-direction:column; margin-bottom:2px; position:relative; padding-bottom:2px; border-radius:18px 18px 18px 6px; box-shadow:0 1px 5px #0001; background:lavender; align-self:flex-start; animation:fadeInMsg 0.18s; transition:background 0.2s, box-shadow 0.2s; user-select:text; word-break:break-word; overflow-wrap:break-word; white-space:pre-line; border:1.5px solid #d6cde9; margin-left:8px;}
+    .cdx-message.sent { align-self:flex-end; border-radius:18px 18px 6px 18px; border:1.5px solid #d6cde9; margin-right:8px; background:lavender;}
+    .cdx-message .cdx-sender-row { display:flex; align-items:center; gap:8px; margin:6px 0 2px 14px;}
+    .cdx-message .cdx-sender-pic { width:22px; height:22px; border-radius:7px; object-fit:cover; border:1px solid #eee; background:#fff;}
+    .cdx-message .cdx-sender { font-size:0.93rem; font-weight:600; color:#6b4e9c;}
+    .cdx-message.sent .cdx-sender { color:#4b3a75;}
+    .cdx-bubble { padding:11px 16px 7px 16px; font-size:1rem; line-height:1.5; border-radius:16px; background:transparent; position:relative; word-break:break-word; overflow-wrap:break-word; white-space:pre-line;}
+    .cdx-meta { font-size:0.75rem; color:#888; margin:0 12px 6px 0; text-align:right; align-self:flex-end;}
+    .cdx-message img.cdx-img { margin:6px 0 0 0; max-width:100%; border-radius:10px; box-shadow:0 2px 8px #0002; display:block;}
+    .cdx-message .cdx-file-link { color:#6b4e9c; text-decoration:underline; font-size:0.97rem; margin-top:6px; margin-left:16px; display:inline-block; word-break:break-all;}
+    .cdx-reply-btn { position:absolute; left:-38px; top:18px; color:#b0a0d1; background:none; border:none; font-size:1.1rem; cursor:pointer; opacity:0; transition:opacity 0.2s; z-index:2;}
+    .cdx-message:hover .cdx-reply-btn, .cdx-message:focus-within .cdx-reply-btn { opacity:1;}
+    .cdx-message.sent .cdx-reply-btn { left:auto; right:-38px;}
+    .cdx-reply-preview { background:#ede7f6; border-left:4px solid #6b4e9c; border-radius:8px; padding:7px 12px; margin-bottom:7px; font-size:0.93rem; color:#4b3a75; display:flex; align-items:center; gap:8px; max-width:95vw; word-break:break-word;}
+    .cdx-reply-preview .cdx-reply-close { margin-left:auto; background:none; border:none; color:#888; font-size:1.1rem; cursor:pointer;}
+    .cdx-input-bar { background:#f7f7f9; display:flex; align-items:center; padding:13px 4vw; gap:10px; border-top:1px solid #e0e0e0; flex-shrink:0;}
+    .cdx-input-bar input[type="text"] { flex:1; padding:12px 16px; border-radius:18px; border:1px solid #d0d0d0; font-size:1rem; outline:none; background:#fff; transition:border 0.2s;}
+    .cdx-input-bar input[type="text"]:focus { border-color:#6b4e9c;}
+    .cdx-input-bar input[type="file"] { display:none;}
+    .cdx-input-bar .cdx-btn { background:none; border:none; font-size:1.3rem; color:#8a75b1; cursor:pointer; margin:0 2px; transition:color 0.2s; border-radius:50%; width:38px; height:38px; display:flex; align-items:center; justify-content:center;}
+    .cdx-input-bar .cdx-btn:hover { color:#4b3a75; background:#e6e9f0;}
+    .cdx-input-bar .cdx-send-btn { color:#fff; background:#6b4e9c; border-radius:50%; width:42px; height:42px; display:flex; align-items:center; justify-content:center; font-size:1.3rem; margin-left:4px; border:none; cursor:pointer; transition:background 0.2s;}
+    .cdx-input-bar .cdx-send-btn:hover { background:#4b3a75;}
+    .cdx-guide-popup-bg { position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(60,50,100,0.25); display:flex; align-items:center; justify-content:center; z-index:3000; animation:fadeInBg 0.5s;}
+    .cdx-guide-popup { background:#fff; border-radius:20px; box-shadow:0 8px 40px #6b4e9c44; padding:36px 30px 30px 30px; min-width:300px; max-width:96vw; text-align:center; position:relative; transform:scale(0.7); opacity:0; animation:popupIn 0.7s cubic-bezier(.25,1.7,.7,1.2) forwards;}
+    .cdx-guide-popup h2 { color:#6b4e9c; font-size:1.5rem; margin-bottom:16px; letter-spacing:1px; font-weight:700;}
+    .cdx-guide-popup ul { text-align:left; margin:18px auto 18px auto; padding:0 0 0 18px; color:#4b3a75; font-size:1.09rem; line-height:1.8;}
+    .cdx-guide-popup .cdx-guide-btn { margin-top:18px; background:#6b4e9c; color:#fff; border:none; border-radius:10px; padding:10px 32px; font-size:1.08rem; font-weight:600; cursor:pointer; transition:background 0.2s, box-shadow 0.2s; box-shadow:0 2px 8px #6b4e9c22;}
+    .cdx-guide-popup .cdx-guide-btn:hover { background:#4b3a75; box-shadow:0 4px 16px #6b4e9c33;}
+    .cdx-guide-popup .cdx-guide-emoji { font-size:2.2rem; margin-bottom:8px; display:block; animation:bounce 1.2s infinite alternate;}
+    @keyframes fadeInMsg { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;} }
+    @keyframes fadeInBg { from{opacity:0;} to{opacity:1;} }
+    @keyframes popupIn { 0%{transform:scale(0.7); opacity:0;} 80%{transform:scale(1.07); opacity:1;} 100%{transform:scale(1); opacity:1;} }
+    @keyframes bounce { 0%{transform:translateY(0);} 100%{transform:translateY(-12px);} }
+    @media (max-width: 700px) {
+      .cdx-chat-area, .cdx-input-bar { padding-left: 2vw; padding-right: 2vw; }
+      .cdx-video-box video { width: 95vw; }
+      .cdx-message { width: 90vw; min-width: 90vw; max-width: 90vw;}
+    }
+    @media (max-width: 500px) {
+      .cdx-header { border-radius: 0; }
+      .cdx-chat-area, .cdx-input-bar { padding-left: 1vw; padding-right: 1vw; }
+      .cdx-video-box { padding: 10px 2vw;}
+      .cdx-video-box video { width: 97vw; }
+      .cdx-message { width: 96vw; min-width: 96vw; max-width: 96vw;}
+    }
+    .cdx-modal-bg { position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(40,50,60,0.85); display:flex; align-items:center; justify-content:center; z-index:2000;}
+    .cdx-modal { background:#fff; border-radius:16px; padding:32px 20px; box-shadow:0 8px 32px #0006; text-align:center; min-width:280px; max-width:95vw;}
+    .cdx-modal h2 { color:#6b4e9c; margin-bottom:18px;}
+    .cdx-modal input { padding:12px 18px; font-size:1.1rem; border-radius:8px; border:1px solid #d0d0d0; margin-bottom:18px; width:90%; max-width:270px;}
+    .cdx-modal button { background:#6b4e9c; color:#fff; border:none; border-radius:8px; padding:10px 28px; font-size:1rem; cursor:pointer; transition:background 0.2s;}
+    .cdx-modal button:hover { background:#4b3a75; }
+    .cdx-modal .cdx-error { color:#c00; font-size:0.98rem; margin-bottom:10px;}
+    .cdx-modal .cdx-profile-upload { margin-bottom:18px; display:flex; flex-direction:column; align-items:center; gap:7px;}
+    .cdx-modal .cdx-profile-preview { width:64px; height:64px; border-radius:10px; object-fit:cover; border:2px solid #6b4e9c; background:#eee; cursor:pointer;}
+    .cdx-modal .cdx-profile-upload-label { font-size:0.95rem; color:#6b4e9c; cursor:pointer; text-decoration:underline;}
+    .cdx-modal .cdx-color-label { font-size:0.95rem; color:#6b4e9c; margin-top:8px; margin-bottom:4px; display:block;}
+    .cdx-modal input[type="color"] { width:36px; height:36px; border:none; background:none; cursor:pointer; vertical-align:middle; margin-bottom:8px;}
+    .cdx-video-modal { position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(40,50,60,0.85); display:flex; align-items:center; justify-content:center; z-index:1000; display:none;}
+    .cdx-video-modal.active { display:flex;}
+    .cdx-video-box { background:#fff; border-radius:16px; padding:24px 20px; box-shadow:0 8px 32px #0006; text-align:center; min-width:320px; max-width:98vw;}
+    .cdx-video-box h2 { color:#6b4e9c; font-size:1.2rem; margin-bottom:18px;}
+    .cdx-video-box video { width:320px; max-width:80vw; background:#222; border-radius:8px; margin-bottom:12px;}
+    .cdx-video-box button { background:#6b4e9c; color:#fff; border:none; border-radius:8px; padding:8px 20px; font-size:1rem; margin:0 7px; cursor:pointer; transition:background 0.2s;}
+    .cdx-video-box button:hover { background:#4b3a75;}
   </style>
 </head>
 <body>
@@ -83,15 +157,9 @@
     function closeGuidePopup() {
       document.getElementById('cdx-guide-popup-bg').style.display = "none";
     }
-    // --- Unique username system with profile pic and bubble color ---
-    let users = [];
-    let myUser = null;
-    let messages = [];
-    let replyTo = null;
+    let myUser = null, messages = [], replyTo = null;
     let myProfilePic = "https://via.placeholder.com/44x44?text=+";
-    let myBubbleColor = "#e6e6fa"; // lavender
-
-    // WebSocket
+    let myBubbleColor = "#e6e6fa";
     let ws;
     function connectWS() {
       ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host);
@@ -114,8 +182,6 @@
       ws.onclose = () => setTimeout(connectWS, 3000);
     }
     connectWS();
-
-    // Profile picture upload logic (modal)
     document.getElementById('cdx-profile-preview').onclick =
     document.querySelector('.cdx-profile-upload-label').onclick = function() {
       document.getElementById('cdx-profile-pic-input').click();
@@ -132,16 +198,13 @@
       reader.readAsDataURL(file);
       this.value = '';
     };
-
     document.getElementById('cdx-header-profile-pic').onclick = function() {
       document.getElementById('cdx-profile-pic-input').click();
     };
-
     document.getElementById('cdx-bubble-color-input').onchange = function() {
       myBubbleColor = "#e6e6fa";
       this.value = "#e6e6fa";
     };
-
     function showUsernameModal() {
       document.getElementById('cdx-username-modal').style.display = 'flex';
       document.getElementById('cdx-username-input').focus();
@@ -268,8 +331,7 @@
       input.value += "😊";
       input.focus();
     };
-
-    // --- WebRTC Video Call (one-to-one, basic demo) ---
+    // --- WebRTC Video Call (group demo) ---
     let localStream, remoteStream, pc;
     let isCalling = false;
     document.getElementById('cdx-video-btn').onclick = () => {
@@ -290,7 +352,7 @@
       localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
-      ws.send(JSON.stringify({ type: 'signal', target: null, signal: { offer: offer } }));
+      ws.send(JSON.stringify({ type: 'signal', signal: { offer: offer } }));
     }
     function hangupCall() {
       document.getElementById('cdx-video-modal').classList.remove('active');
@@ -307,7 +369,7 @@
       const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
       const peer = new RTCPeerConnection(config);
       peer.onicecandidate = e => {
-        if (e.candidate) ws.send(JSON.stringify({ type: 'signal', target: null, signal: { candidate: e.candidate } }));
+        if (e.candidate) ws.send(JSON.stringify({ type: 'signal', signal: { candidate: e.candidate } }));
       };
       peer.ontrack = e => {
         if (!remoteStream) {
@@ -329,7 +391,7 @@
         await pc.setRemoteDescription(new RTCSessionDescription(data.signal.offer));
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-        ws.send(JSON.stringify({ type: 'signal', target: data.from, signal: { answer: answer } }));
+        ws.send(JSON.stringify({ type: 'signal', signal: { answer: answer } }));
         document.getElementById('cdx-video-modal').classList.add('active');
         document.getElementById('cdx-video-status').textContent = 'In call...';
       }
