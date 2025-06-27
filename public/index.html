@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Tech WhatsApp Groups & Channels</title>
+<title>Tech WhatsApp Groups</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 <style>
   :root {
@@ -62,30 +62,6 @@
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(10px);
   }
-
-  /* Tabs */
-  .tabs {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 30px;
-  }
-  .tab {
-    padding: 14px 30px;
-    cursor: pointer;
-    font-weight: 700;
-    font-size: 1.2rem;
-    color: var(--text-muted);
-    border-bottom: 3px solid transparent;
-    transition: color 0.3s, border-color 0.3s;
-    user-select: none;
-  }
-  .tab.active {
-    color: var(--neon-pink);
-    border-color: var(--neon-pink);
-    text-shadow: 0 0 8px var(--neon-pink);
-  }
-
-  /* Form */
   form {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -103,8 +79,7 @@
   }
   form input[type="text"],
   form input[type="url"],
-  form input[type="file"],
-  form select {
+  form input[type="file"] {
     width: 100%;
     padding: 14px 18px;
     border-radius: 12px;
@@ -117,8 +92,7 @@
   }
   form input[type="text"]:focus,
   form input[type="url"]:focus,
-  form input[type="file"]:focus,
-  form select:focus {
+  form input[type="file"]:focus {
     border-color: var(--neon-blue);
     box-shadow: 0 0 10px var(--neon-blue);
     outline: none;
@@ -200,8 +174,6 @@
     color: var(--error-color);
     text-shadow: 0 0 6px var(--error-color);
   }
-
-  /* Search bar */
   .search-container {
     position: relative;
     margin-bottom: 2rem;
@@ -233,15 +205,11 @@
     pointer-events: none;
     text-shadow: 0 0 6px var(--neon-pink);
   }
-
-  /* Groups grid */
   .groups-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 30px;
   }
-
-  /* Group card */
   .group-card {
     background: var(--card-bg);
     border-radius: 20px;
@@ -329,36 +297,24 @@
 </style>
 </head>
 <body>
-  <div class="container" role="main" aria-label="WhatsApp Tech Groups and Channels">
-    <h1>Tech WhatsApp Groups & Channels</h1>
+  <div class="container" role="main" aria-label="WhatsApp Tech Groups">
+    <h1>Tech WhatsApp Groups</h1>
     <p class="subtitle">Connect, share, and grow with tech communities</p>
 
-    <div class="tabs" role="tablist" aria-label="Categories">
-      <button class="tab active" role="tab" aria-selected="true" aria-controls="groupsPanel" id="groupsTab">Groups</button>
-      <button class="tab" role="tab" aria-selected="false" aria-controls="channelsPanel" id="channelsTab">Channels</button>
-    </div>
-
-    <form id="groupForm" enctype="multipart/form-data" aria-label="Upload WhatsApp group or channel link form">
+    <form id="groupForm" enctype="multipart/form-data" aria-label="Upload WhatsApp group link form">
       <div>
         <label for="username">Your Username</label>
         <input type="text" id="username" name="username" placeholder="Your name or handle" required autocomplete="username" />
       </div>
       <div>
-        <label for="groupName">Name</label>
+        <label for="groupName">Group Name</label>
         <input type="text" id="groupName" name="groupName" placeholder="Tech Talk" required autocomplete="off" />
       </div>
       <div>
-        <label for="groupLink">WhatsApp Link</label>
-        <input type="url" id="groupLink" name="groupLink" placeholder="https://chat.whatsapp.com/ or https://whatsapp.com/channel/..." required autocomplete="off" />
+        <label for="groupLink">WhatsApp Group Link</label>
+        <input type="url" id="groupLink" name="groupLink" placeholder="https://chat.whatsapp.com/..." required autocomplete="off" />
       </div>
-      <div>
-        <label for="category">Category</label>
-        <select id="category" name="category" required>
-          <option value="group" selected>Group</option>
-          <option value="channel">Channel</option>
-        </select>
-      </div>
-      <div class="file-input-wrapper" tabindex="0" aria-label="Upload group or channel image">
+      <div class="file-input-wrapper" tabindex="0" aria-label="Upload group image">
         <i class="fas fa-cloud-upload-alt"></i>
         <span>Click or drag & drop to upload a photo (optional)</span>
         <input type="file" id="groupImage" name="groupImage" accept="image/*" />
@@ -370,41 +326,20 @@
     </form>
 
     <div class="search-container">
-      <input type="search" id="searchInput" placeholder="Search groups or channels..." aria-label="Search WhatsApp groups and channels" />
+      <input type="search" id="searchInput" placeholder="Search groups..." aria-label="Search WhatsApp groups" />
       <i class="fas fa-search" aria-hidden="true"></i>
     </div>
 
-    <section id="groupsPanel" class="groups-container" role="tabpanel" aria-labelledby="groupsTab"></section>
-    <section id="channelsPanel" class="groups-container" role="tabpanel" aria-labelledby="channelsTab" hidden></section>
+    <section class="groups-container" id="groupList" aria-live="polite" aria-relevant="additions removals"></section>
   </div>
 
   <script>
     const form = document.getElementById('groupForm');
     const searchInput = document.getElementById('searchInput');
-    const groupsPanel = document.getElementById('groupsPanel');
-    const channelsPanel = document.getElementById('channelsPanel');
+    const groupList = document.getElementById('groupList');
     const formMsg = document.getElementById('formMsg');
     const groupImageInput = document.getElementById('groupImage');
     const previewImg = document.getElementById('previewImg');
-    const tabs = document.querySelectorAll('.tab');
-    const categorySelect = document.getElementById('category');
-
-    // Tab switching
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        tabs.forEach(t => {
-          t.classList.remove('active');
-          t.setAttribute('aria-selected', 'false');
-          document.getElementById(t.getAttribute('aria-controls')).hidden = true;
-        });
-        tab.classList.add('active');
-        tab.setAttribute('aria-selected', 'true');
-        document.getElementById(tab.getAttribute('aria-controls')).hidden = false;
-
-        // Update category select based on tab
-        categorySelect.value = tab.id === 'groupsTab' ? 'group' : 'channel';
-      });
-    });
 
     // Image preview
     groupImageInput.addEventListener('change', (e) => {
@@ -421,58 +356,48 @@
       }
     });
 
-    async function loadLinks(filter = '') {
-      groupsPanel.innerHTML = '<p class="empty-state">Loading groups...</p>';
-      channelsPanel.innerHTML = '<p class="empty-state">Loading channels...</p>';
+    async function loadGroups(filter = '') {
+      groupList.innerHTML = '<p class="empty-state">Loading groups...</p>';
       try {
         const res = await fetch('/links');
-        if (!res.ok) throw new Error('Failed to fetch links');
-        const data = await res.json();
+        if (!res.ok) throw new Error('Failed to fetch groups');
+        const groups = await res.json();
 
-        const filteredGroups = data.groups.filter(g =>
-          g.name.toLowerCase().includes(filter) ||
-          g.link.toLowerCase().includes(filter) ||
-          (g.username && g.username.toLowerCase().includes(filter))
-        );
-        const filteredChannels = data.channels.filter(c =>
-          c.name.toLowerCase().includes(filter) ||
-          c.link.toLowerCase().includes(filter) ||
-          (c.username && c.username.toLowerCase().includes(filter))
+        const filtered = groups.filter(
+          (g) =>
+            g.groupName.toLowerCase().includes(filter) ||
+            g.groupLink.toLowerCase().includes(filter) ||
+            (g.username && g.username.toLowerCase().includes(filter))
         );
 
-        renderLinks(filteredGroups, groupsPanel);
-        renderLinks(filteredChannels, channelsPanel);
-      } catch {
-        groupsPanel.innerHTML = '<p class="empty-state">Failed to load groups. Try again later.</p>';
-        channelsPanel.innerHTML = '<p class="empty-state">Failed to load channels. Try again later.</p>';
-      }
-    }
+        if (filtered.length === 0) {
+          groupList.innerHTML = '<p class="empty-state">No groups found.</p>';
+          return;
+        }
 
-    function renderLinks(items, container) {
-      if (items.length === 0) {
-        container.innerHTML = '<p class="empty-state">No items found.</p>';
-        return;
-      }
-      container.innerHTML = '';
-      items.forEach(item => {
-        const card = document.createElement('article');
-        card.className = 'group-card';
-        const imgSrc = item.imagePath
-          ? item.imagePath
-          : `https://www.gravatar.com/avatar/${md5(item.name)}?d=identicon&s=200`;
+        groupList.innerHTML = '';
+        filtered.forEach(group => {
+          const card = document.createElement('article');
+          card.className = 'group-card';
+          const imgSrc = group.imagePath
+            ? group.imagePath
+            : `https://www.gravatar.com/avatar/${md5(group.groupName)}?d=identicon&s=200`;
 
-        card.innerHTML = `
-          <div class="group-img" role="img" aria-label="Image for ${item.name}">
-            <img src="${imgSrc}" alt="Image for ${item.name}" />
-          </div>
-          <div class="group-info">
-            <h2 class="group-name">${escapeHtml(item.name)}</h2>
-            <p class="group-user">Shared by: ${escapeHtml(item.username)}</p>
-            <a href="${escapeHtml(item.link)}" class="group-link" target="_blank" rel="noopener noreferrer" aria-label="Join ${escapeHtml(item.name)}">${item.link.includes('chat.whatsapp.com') || item.link.includes('whatsapp.com/channel') ? 'Join' : 'Visit'} Link</a>
-          </div>
-        `;
-        container.appendChild(card);
-      });
+          card.innerHTML = `
+            <div class="group-img" role="img" aria-label="Group image for ${group.groupName}">
+              <img src="${imgSrc}" alt="Group image for ${group.groupName}" />
+            </div>
+            <div class="group-info">
+              <h2 class="group-name">${escapeHtml(group.groupName)}</h2>
+              <p class="group-user">Shared by: ${escapeHtml(group.username)}</p>
+              <a href="${escapeHtml(group.groupLink)}" class="group-link" target="_blank" rel="noopener noreferrer" aria-label="Join group ${escapeHtml(group.groupName)}">Join Group</a>
+            </div>
+          `;
+          groupList.appendChild(card);
+        });
+      } catch (err) {
+        groupList.innerHTML = '<p class="empty-state">Failed to load groups. Try again later.</p>';
+      }
     }
 
     function escapeHtml(text) {
@@ -493,7 +418,7 @@
     }
 
     searchInput.addEventListener('input', () => {
-      loadLinks(searchInput.value.trim().toLowerCase());
+      loadGroups(searchInput.value.trim().toLowerCase());
     });
 
     form.addEventListener('submit', async (e) => {
@@ -510,14 +435,14 @@
           body: formData
         });
         if (res.ok) {
-          formMsg.textContent = 'Link added successfully!';
+          formMsg.textContent = 'Group added successfully!';
           formMsg.classList.add('success');
-          loadLinks();
+          loadGroups();
           form.reset();
           previewImg.style.display = 'none';
         } else {
           const text = await res.text();
-          formMsg.textContent = text || 'Failed to add link.';
+          formMsg.textContent = text || 'Failed to add group.';
           formMsg.classList.add('error');
         }
       } catch {
@@ -530,7 +455,7 @@
     });
 
     // Initial load
-    loadLinks();
+    loadGroups();
   </script>
 </body>
 </html>
