@@ -1,31 +1,39 @@
 const express = require('express');
 const path = require('path');
 const multer = require('multer');
-const sqlite3 = require('sqlite3').verbose();
+const { MongoClient, ServerApiVersion } = require('mongodb');
 const fs = require('fs');
 
 const app = express();
 const port = process.env.PORT || 3000;
-const upload = multer({ dest: 'public/uploads/' });
+const upload = multer({ dest: path.join(__dirname, 'public', 'uploads') });
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-// Setup SQLite database
-const dbFile = path.join(__dirname, 'groups.db');
-const db = new sqlite3.Database(dbFile);
+// ======= MongoDB Atlas Setup =======
+const MONGO_URI = 'mongodb+srv://calyxdrey11:<db_password>@drey.qptc9q8.mongodb.net/?retryWrites=true&w=majority&appName=Drey'; // <--- REPLACE THIS!
+const DB_NAME = 'whatsapp_links';
+const COLLECTION = 'groups';
 
-db.serialize(() => {
-  db.run(`CREATE TABLE IF NOT EXISTS groups (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT NOT NULL,
-    groupName TEXT NOT NULL,
-    groupLink TEXT NOT NULL,
-    imagePath TEXT
-  )`);
-});
+let db, groupsCollection;
 
-app.post('/submit', upload.single('groupImage'), (req, res) => {
+// Connect to MongoDB Atlas
+MongoClient.connect(MONGO_URI, { serverApi: ServerApiVersion.v1 })
+  .then(client => {
+    db = client.db(DB_NAME);
+    groupsCollection = db.collection(COLLECTION);
+    app.listen(port, () => {
+      console.log(`Server running at http://localhost:${port}/`);
+    });
+  })
+  .catch(err => {
+    console.error('Failed to connect to MongoDB Atlas:', err);
+    process.exit(1);
+  });
+
+// ======= Routes =======
+app.post('/submit', upload.single('groupImage'), async (req, res) => {
   const { username, groupName, groupLink } = req.body;
   if (!username || !username.trim()) return res.status(400).send('Username is required.');
   if (!groupName || !groupName.trim()) return res.status(400).send('Group name is required.');
@@ -34,33 +42,31 @@ app.post('/submit', upload.single('groupImage'), (req, res) => {
     return res.status(400).send('Invalid WhatsApp group link.');
   }
   const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
-  db.run(
-    `INSERT INTO groups (username, groupName, groupLink, imagePath) VALUES (?, ?, ?, ?)`,
-    [username.trim(), groupName.trim(), groupLink.trim(), imagePath],
-    function (err) {
-      if (err) {
-        console.error('DB insert error:', err);
-        return res.status(500).send('Failed to save group.');
-      }
-      res.sendStatus(200);
-    }
-  );
+  try {
+    await groupsCollection.insertOne({
+      username: username.trim(),
+      groupName: groupName.trim(),
+      groupLink: groupLink.trim(),
+      imagePath,
+      createdAt: new Date()
+    });
+    res.sendStatus(200);
+  } catch (err) {
+    console.error('MongoDB insert error:', err);
+    res.status(500).send('Failed to save group.');
+  }
 });
 
-app.get('/links', (req, res) => {
-  db.all(`SELECT * FROM groups ORDER BY id DESC`, [], (err, rows) => {
-    if (err) {
-      console.error('DB select error:', err);
-      return res.status(500).json([]);
-    }
-    res.json(rows);
-  });
+app.get('/links', async (req, res) => {
+  try {
+    const groups = await groupsCollection.find().sort({ createdAt: -1 }).toArray();
+    res.json(groups);
+  } catch (err) {
+    console.error('MongoDB find error:', err);
+    res.status(500).json([]);
+  }
 });
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}/`);
 });
