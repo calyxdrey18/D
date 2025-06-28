@@ -1,12 +1,13 @@
 {
-  "name": "calyx-drey-chathub",
+  "name": "whatsapp-group-links",
   "version": "1.0.0",
-  "description": "Modern group chat app with lavender bubbles, animated guide, and video calling",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "ws": "^8.13.0"
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "sqlite3": "^5.1.6"
   }
 }

@@ -1,100 +1,66 @@
-const http = require('http');
-const fs = require('fs');
+const express = require('express');
 const path = require('path');
-const WebSocket = require('ws');
+const multer = require('multer');
+const sqlite3 = require('sqlite3').verbose();
+const fs = require('fs');
 
-const publicDir = path.join(__dirname, 'public');
-const PORT = process.env.PORT || 10000;
+const app = express();
+const port = process.env.PORT || 3000;
+const upload = multer({ dest: 'public/uploads/' });
 
-let messages = [];
-let clients = new Map(); // Map ws => { userId, username, profilePic }
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
 
-const server = http.createServer((req, res) => {
-  let file = req.url === '/' ? '/index.html' : req.url;
-  const filePath = path.join(publicDir, file.split('?')[0]);
-  fs.readFile(filePath, (err, data) => {
+// Setup SQLite database
+const dbFile = path.join(__dirname, 'groups.db');
+const db = new sqlite3.Database(dbFile);
+
+db.serialize(() => {
+  db.run(`CREATE TABLE IF NOT EXISTS groups (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL,
+    groupName TEXT NOT NULL,
+    groupLink TEXT NOT NULL,
+    imagePath TEXT
+  )`);
+});
+
+app.post('/submit', upload.single('groupImage'), (req, res) => {
+  const { username, groupName, groupLink } = req.body;
+  if (!username || !username.trim()) return res.status(400).send('Username is required.');
+  if (!groupName || !groupName.trim()) return res.status(400).send('Group name is required.');
+  if (!groupLink || !groupLink.trim()) return res.status(400).send('Group link is required.');
+  if (!groupLink.startsWith('https://chat.whatsapp.com/')) {
+    return res.status(400).send('Invalid WhatsApp group link.');
+  }
+  const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+  db.run(
+    `INSERT INTO groups (username, groupName, groupLink, imagePath) VALUES (?, ?, ?, ?)`,
+    [username.trim(), groupName.trim(), groupLink.trim(), imagePath],
+    function (err) {
+      if (err) {
+        console.error('DB insert error:', err);
+        return res.status(500).send('Failed to save group.');
+      }
+      res.sendStatus(200);
+    }
+  );
+});
+
+app.get('/links', (req, res) => {
+  db.all(`SELECT * FROM groups ORDER BY id DESC`, [], (err, rows) => {
     if (err) {
-      res.writeHead(404);
-      return res.end('Not found');
+      console.error('DB select error:', err);
+      return res.status(500).json([]);
     }
-    let type = 'text/html';
-    if (file.endsWith('.js')) type = 'application/javascript';
-    if (file.endsWith('.css')) type = 'text/css';
-    if (file.endsWith('.png')) type = 'image/png';
-    if (file.endsWith('.jpg') || file.endsWith('.jpeg')) type = 'image/jpeg';
-    if (file.endsWith('.svg')) type = 'image/svg+xml';
-    res.writeHead(200, { 'Content-Type': type });
-    res.end(data);
+    res.json(rows);
   });
 });
 
-const wss = new WebSocket.Server({ server });
-
-function broadcast(data) {
-  const msg = JSON.stringify(data);
-  wss.clients.forEach(client => {
-    if (client.readyState === WebSocket.OPEN) client.send(msg);
-  });
-}
-
-function getOnlineCount() {
-  const ids = new Set();
-  clients.forEach(({ userId }) => ids.add(userId));
-  return ids.size;
-}
-
-wss.on('connection', ws => {
-  let userInfo = null;
-
-  ws.on('message', msg => {
-    let data;
-    try { data = JSON.parse(msg); } catch { return; }
-    if (data.type === 'join') {
-      userInfo = {
-        userId: data.userId,
-        username: data.username,
-        profilePic: data.profilePic
-      };
-      clients.set(ws, userInfo);
-      ws.send(JSON.stringify({ type: 'history', messages }));
-      broadcast({ type: 'online', count: getOnlineCount() });
-      // System join message
-      const sysMsg = {
-        user: { name: 'System', profilePic: '', color: '#999' },
-        text: `${userInfo.username} joined the chat.`,
-        time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),
-        system: true
-      };
-      messages.push(sysMsg);
-      broadcast({ type: 'message', message: sysMsg });
-    } else if (data.type === 'message') {
-      messages.push(data.message);
-      if (messages.length > 200) messages = messages.slice(-200);
-      broadcast({ type: 'message', message: data.message });
-    } else if (data.type === 'signal') {
-      wss.clients.forEach(client => {
-        if (client !== ws && client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({ type: 'signal', from: userInfo.username, signal: data.signal }));
-        }
-      });
-    }
-  });
-
-  ws.on('close', () => {
-    if (userInfo) {
-      clients.delete(ws);
-      broadcast({ type: 'online', count: getOnlineCount() });
-      // System leave message
-      const sysMsg = {
-        user: { name: 'System', profilePic: '', color: '#999' },
-        text: `${userInfo.username} left the chat.`,
-        time: new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),
-        system: true
-      };
-      messages.push(sysMsg);
-      broadcast({ type: 'message', message: sysMsg });
-    }
-  });
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}/`);
+});
